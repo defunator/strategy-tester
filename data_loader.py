@@ -54,7 +54,7 @@ def load_sp500_data(args=None):
     sp500_adj_close_df.to_csv('sp500_joined_adj_close.csv')
 
 
-def main():
+if __name__ == '__main__':
     parser = ArgumentParser()
     subparsers = parser.add_subparsers()
 
@@ -67,8 +67,3 @@ def main():
 
     args = parser.parse_args()
     args.func(args)
-
-
-if __name__ == '__main__':
-    main()
-
