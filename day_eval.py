@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 class DayEval:
@@ -18,28 +19,31 @@ class DayEval:
         self.commission = commission
 
     def get_ticker_price(self, ticker):
-        assert self.cur_frame in self.df[ticker].keys() \
-            , f'''ERROR get_ticker_price({ticker}): doesn't have '''
-        return self.df[ticker][self.cur_frame]
+        return 0 if self.cur_frame.strftime('%Y-%m-%d') not in self.df[ticker] or np.isnan(self.df[ticker][self.cur_frame.strftime('%Y-%m-%d')])\
+            else self.df[ticker][self.cur_frame.strftime('%Y-%m-%d')]
 
     def buy_ticker(self, ticker, num):
-        assert num * self.get_ticker_price(ticker) * (1. + self.commission) > self.bank \
-            , f'''ERROR buy_ticker({num}, {ticker}): not enough money'''
+        if self.get_ticker_price(ticker) == 0 or num * self.get_ticker_price(ticker) * (1. + self.commission) > self.bank:
+            return False
 
         if ticker not in self.tickers_bought.keys():
             self.tickers_bought[ticker] = 0
         self.tickers_bought[ticker] += num
         self.bank -= num * self.get_ticker_price(ticker) * (1. + self.commission)
+        return True
 
     def get_ticker_num(self, ticker):
         return 0 if ticker not in self.tickers_bought.keys() else self.tickers_bought[ticker]
 
     def sell_ticker(self, ticker, num):
-        assert ticker in self.tickers_bought.keys() and self.tickers_bought[ticker] < num \
+        assert ticker in self.tickers_bought.keys() and self.tickers_bought[ticker] >= num \
             , f'''ERROR sell_ticker({ticker}, {num}): not enough tickers'''
+        if self.get_ticker_price(ticker) == 0:
+            return False
 
         self.tickers_bought[ticker] -= num
         self.bank += num * self.get_ticker_price(ticker) * (1. - self.commission)
+        return True
 
     def next_frame(self):
         if self.cur_frame >= self.frame_end:
