@@ -1,5 +1,6 @@
-import pandas as pd
+import datetime as dt
 import numpy as np
+import pandas as pd
 
 
 class DayEval:
@@ -7,20 +8,20 @@ class DayEval:
                  , start_capital
                  , frame_start
                  , frame_end
-                 , frame_step
                  , adj_close_filename
                  , commission):
         self.start_capital, self.bank = start_capital, start_capital
         self.tickers_bought = {}
         self.frame_start, self.frame_end = frame_start, frame_end
-        self.frame_step = frame_step
-        self.cur_frame = frame_start
         self.df = pd.read_csv(adj_close_filename, index_col=0)
+        self.dates = self.df.index
+        self.cur_frame = 0
+        while self.cur_frame != len(self.dates) and dt.datetime.strptime(self.dates[self.cur_frame], '%Y-%m-%d') < self.frame_start:
+            self.cur_frame += 1
         self.commission = commission
 
     def get_ticker_price(self, ticker):
-        return 0 if self.cur_frame.strftime('%Y-%m-%d') not in self.df[ticker] or np.isnan(self.df[ticker][self.cur_frame.strftime('%Y-%m-%d')])\
-            else self.df[ticker][self.cur_frame.strftime('%Y-%m-%d')]
+        return 0 if np.isnan(self.df[ticker][self.dates[self.cur_frame]]) else self.df[ticker][self.dates[self.cur_frame]]
 
     def buy_ticker(self, ticker, num):
         if self.get_ticker_price(ticker) == 0 or num * self.get_ticker_price(ticker) * (1. + self.commission) > self.bank:
@@ -36,7 +37,7 @@ class DayEval:
         return 0 if ticker not in self.tickers_bought.keys() else self.tickers_bought[ticker]
 
     def sell_ticker(self, ticker, num):
-        assert ticker in self.tickers_bought.keys() and self.tickers_bought[ticker] >= num \
+        assert ticker in self.tickers_bought.keys() and self.tickers_bought[ticker] >= num\
             , f'''ERROR sell_ticker({ticker}, {num}): not enough tickers'''
         if self.get_ticker_price(ticker) == 0:
             return False
@@ -46,9 +47,10 @@ class DayEval:
         return True
 
     def next_frame(self):
-        if self.cur_frame >= self.frame_end:
+        if dt.datetime.strptime(self.dates[self.cur_frame], '%Y-%m-%d') >= self.frame_end \
+                or self.cur_frame + 1 == len(self.dates):
             return False
-        self.cur_frame += self.frame_step
+        self.cur_frame += 1
         return True
 
     def get_profit(self):
