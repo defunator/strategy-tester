@@ -27,7 +27,7 @@ class DayEval:
         if self.get_ticker_price(ticker) == 0:
             return False
         if num * self.get_ticker_price(ticker) * (1. + self.commission) > self.bank:
-            num = int(self.get_ticker_price(ticker) * (1. + self.commission) / self.bank)
+            num = int(self.bank / (self.get_ticker_price(ticker) * (1. + self.commission)))
         assert(num * self.get_ticker_price(ticker) * (1. + self.commission) <= self.bank)
 
         if ticker not in self.tickers_bought.keys():
