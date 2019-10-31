@@ -24,8 +24,11 @@ class DayEval:
         return 0 if np.isnan(self.df[ticker][self.dates[self.cur_frame]]) else self.df[ticker][self.dates[self.cur_frame]]
 
     def buy_ticker(self, ticker, num):
-        if self.get_ticker_price(ticker) == 0 or num * self.get_ticker_price(ticker) * (1. + self.commission) > self.bank:
+        if self.get_ticker_price(ticker) == 0:
             return False
+        if num * self.get_ticker_price(ticker) * (1. + self.commission) > self.bank:
+            num = int(self.get_ticker_price(ticker) * (1. + self.commission) / self.bank)
+        assert(num * self.get_ticker_price(ticker) * (1. + self.commission) <= self.bank)
 
         if ticker not in self.tickers_bought.keys():
             self.tickers_bought[ticker] = 0
