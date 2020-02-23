@@ -1,1 +1,1 @@
-# trading-bot
+# strategy-tester
